@@ -1,6 +1,8 @@
-const { CustomAPIError } = require("../errors");
+import { ErrorRequestHandler } from "express";
+import { CustomAPIError } from "../errors";
 
-const errorHandlerMiddleware = (err, req, res, next) => {
+// const errorHandlerMiddleware = (err: Errback, req: Request, res: Response, next: NextFunction) => {
+const errorHandlerMiddleware: ErrorRequestHandler = (err, req, res, next) => {
     // Set the error we're returning to a status code/msg explictly passed in, else use default values:
     let customError = {
         statusCode: err.statusCode || 500,
@@ -16,4 +18,4 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     return res.status(customError.statusCode).json({ msg: customError.msg });
 };
 
-module.exports = errorHandlerMiddleware;
+export default errorHandlerMiddleware;

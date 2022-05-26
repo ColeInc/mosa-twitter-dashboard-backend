@@ -6,6 +6,12 @@ Node.js backend for Twitter Dashboard Platform. Interacting with Firebase for au
 
 -   dotenv
 -   express
+-   typescript
+-   ts-node
+-   @types/node
+-   @types/node-fetch
+-   @types/express
+-   nodemon
 -   express-async-errors
 -   firebase-admin
 -
