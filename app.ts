@@ -10,7 +10,7 @@ import notFoundMiddleware from "./middleware/not-found";
 import errorHandlerMiddleware from "./middleware/error-handler";
 import authenticateUser from "./middleware/auth";
 
-import postsRoute from "./routes/posts";
+import postsRoute from "./routes/posts.route";
 
 app.use(express.json());
 
@@ -20,6 +20,7 @@ app.get("/ping", (req: Request, res: Response) => {
 });
 
 app.use("/api/v1/posts", authenticateUser, postsRoute);
+// app.use("/api/v1/posts", postsRoute);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

@@ -14,4 +14,5 @@ Node.js backend for Twitter Dashboard Platform. Interacting with Firebase for au
 -   nodemon
 -   express-async-errors
 -   firebase-admin
+-   zod
 -
