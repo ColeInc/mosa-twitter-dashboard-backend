@@ -1,5 +1,5 @@
 import express from "express";
-import { getPosts, addPost } from "../controllers/posts";
+import { getPosts, addPost } from "../controllers/posts.controller";
 import validatePayloadMiddleware from "../middleware/validate-payload";
 import postSchema from "../schemas/post.schema";
 
