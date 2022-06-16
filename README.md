@@ -1,6 +1,6 @@
 # twitter-dashboard-backend
 
-Node.js backend for Twitter Dashboard Platform. Interacting with Firebase for authentication &amp; database
+Node.js backend for Twitter Dashboard Platform. Interacting with Firebase for CRUD operations to db, authenticating with Twitter via OAuth 2.0, Zod for schema validation of incoming requests, and Jest/Supertest for unit testing.
 
 ## Dependencies
 

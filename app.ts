@@ -18,6 +18,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 /* ----------------- Routes ----------------- */
+
 app.get("/ping", (req: Request, res: Response) => {
     res.status(200).json({ msg: "success!" });
 });
