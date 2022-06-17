@@ -25,8 +25,9 @@ const getRedirect = (req: Request, res: Response) => {
 };
 
 const getAccessToken = (req: Request, res: Response) => {
-    console.log("RECEIVED AT access_token:\n", req.body, req.params, req.query);
-    console.log("req.cookies", req.cookies);
+    if (!req.query || !req.query.state || !req.query.authCode) {
+        return res.status(400).send('invalid "authCode" or "state" in request');
+    }
 
     // Extract state and code from query string
     const { state, authCode } = req.query;
@@ -81,7 +82,7 @@ const getAccessToken = (req: Request, res: Response) => {
 
             res.status(200).json({ userData, success: true });
         })
-        .catch(() => res.status(403).send("Invalid verifier or access tokens!"));
+        .catch(() => res.status(403).send("Invalid verifier or access token provided!"));
 };
 
 const refreshToken = async (req: Request, res: Response) => {

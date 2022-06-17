@@ -7,6 +7,8 @@ const config: Config.InitialOptions = {
     verbose: true,
     forceExit: true,
     clearMocks: true,
+    resetMocks: true,
+    restoreMocks: true,
 };
 export default config;
 
