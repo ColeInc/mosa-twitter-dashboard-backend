@@ -19,6 +19,9 @@ Node.js backend for Twitter Dashboard Platform. Interacting with Firebase for CR
 -   @types/jest
 -   @types/supertest
 -   cookie-parser
--   firebase-admin
 -   twitter-api-v2
--
+-   helmet
+-   cors
+-   xss-clean
+-   express-rate-limit
+-   crypto

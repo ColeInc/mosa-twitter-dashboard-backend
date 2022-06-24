@@ -1,6 +1,9 @@
-import { Request, Response } from "express";
 import { TwitterApi } from "twitter-api-v2";
+import { encode } from "../helpers/crypto";
+import { Request, Response } from "express";
+import jwtPayload from "../models/jwtPayload.model";
 import jwt from "jsonwebtoken";
+
 const { sign, verify } = jwt;
 
 const getRedirect = (req: Request, res: Response) => {
@@ -33,9 +36,8 @@ const getAccessToken = (req: Request, res: Response) => {
     const { state, authCode } = req.query;
 
     // Get the saved codeVerifier/state from cookie
-    console.log("pulled cookie:", req.cookies.twitter_auth);
+    console.log("pulled cookie @ /access_token:", req.cookies.twitter_auth);
     const { codeVerifier, state: cookieState } = JSON.parse(req.cookies.twitter_auth);
-    console.log("all 4 together:", { codeVerifier, state, cookieState, authCode });
 
     if (!codeVerifier || !state || !cookieState || !authCode) {
         return res.status(400).send("You denied authorization to the app or your session expired!");
@@ -54,18 +56,18 @@ const getAccessToken = (req: Request, res: Response) => {
     client
         .loginWithOAuth2({ code: authCode as string, codeVerifier, redirectUri: process.env.TWITTER_CALLBACK_URL! })
         .then(async ({ client: loggedClient, accessToken, refreshToken, expiresIn }) => {
-            console.log("Step 3 fetched: ", { loggedClient, accessToken, refreshToken, expiresIn });
+            // console.log("fetched from twitter @ /access_token: ", { loggedClient, accessToken, refreshToken, expiresIn });
 
             // Fetch basic user info:
             const { data: userData } = await loggedClient.v2.me({ "user.fields": ["profile_image_url"] });
 
             // Create JWT token with user data in it:
-            const payload = {
+            const payload: jwtPayload = {
                 id: userData.id,
                 name: userData.name,
                 username: userData.username,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
+                accessToken: encode(accessToken),
+                refreshToken: encode(refreshToken!),
                 expiresIn: expiresIn,
             };
 
@@ -74,7 +76,7 @@ const getAccessToken = (req: Request, res: Response) => {
 
             // Store final JWT in cookie:
             res.cookie("twitter_jwt", token, {
-                maxAge: expiresIn,
+                maxAge: 15 * 60 * 1000, // 15 mins
                 secure: true,
                 httpOnly: true,
                 sameSite: true,
