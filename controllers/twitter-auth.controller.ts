@@ -1,8 +1,10 @@
-import { TwitterApi } from "twitter-api-v2";
-import { encode } from "../helpers/crypto";
-import { Request, Response } from "express";
-import jwtPayload from "../models/jwtPayload.model";
 import jwt from "jsonwebtoken";
+import { decode } from "../helpers/crypto";
+import { TwitterApi } from "twitter-api-v2";
+import { NextFunction, Request, Response } from "express";
+import { UnauthenticatedError } from "../errors";
+import jwtPayload from "../models/jwtPayload.model";
+import createJwtAndSetCookie from "../middleware/create-jwt-and-cookie";
 
 const { sign, verify } = jwt;
 
@@ -56,57 +58,64 @@ const getAccessToken = (req: Request, res: Response) => {
     client
         .loginWithOAuth2({ code: authCode as string, codeVerifier, redirectUri: process.env.TWITTER_CALLBACK_URL! })
         .then(async ({ client: loggedClient, accessToken, refreshToken, expiresIn }) => {
-            // console.log("fetched from twitter @ /access_token: ", { loggedClient, accessToken, refreshToken, expiresIn });
+            console.log("fetched from twitter @ /access_token: ", {
+                loggedClient,
+                accessToken,
+                refreshToken,
+                expiresIn,
+            });
+            console.log("@@@ OG refresh:", refreshToken);
 
             // Fetch basic user info:
             const { data: userData } = await loggedClient.v2.me({ "user.fields": ["profile_image_url"] });
 
-            // Create JWT token with user data in it:
-            const payload: jwtPayload = {
-                id: userData.id,
-                name: userData.name,
-                username: userData.username,
-                accessToken: encode(accessToken),
-                refreshToken: encode(refreshToken!),
-                expiresIn: expiresIn,
-            };
-
-            const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: expiresIn });
-            console.log("calced JWT:", token);
-
-            // Store final JWT in cookie:
-            res.cookie("twitter_jwt", token, {
-                maxAge: 15 * 60 * 1000, // 15 mins
-                secure: true,
-                httpOnly: true,
-                sameSite: true,
-            });
-
-            res.status(200).json({ userData, success: true });
+            res.locals.userData = userData;
+            res.locals.accessToken = accessToken;
+            res.locals.refreshToken = refreshToken;
+            res.locals.expiresIn = expiresIn;
+            const callback = () => res.status(200).json({ userData, success: true });
+            createJwtAndSetCookie(req, res, callback);
         })
         .catch(() => res.status(403).send("Invalid verifier or access token provided!"));
 };
 
 const refreshToken = async (req: Request, res: Response) => {
-    // Pull refresh token from unpackaged JWT:
-    //TODO:
-    const refreshToken = "";
+    try {
+        // Pull refresh token from unpackaged JWT:
+        const refreshToken = decode(res.locals.jwt.refreshToken);
+        console.log("DECODED refreshToken", `>${refreshToken}<`);
 
-    const client = new TwitterApi({
-        clientId: process.env.TWITTER_CLIENT_ID,
-        clientSecret: process.env.TWITTER_CLIENT_SECRET,
-    } as any);
+        const client = new TwitterApi({
+            clientId: process.env.TWITTER_CLIENT_ID,
+            clientSecret: process.env.TWITTER_CLIENT_SECRET,
+        } as any);
 
-    const {
-        client: refreshedClient,
-        accessToken,
-        refreshToken: newRefreshToken,
-    } = await client.refreshOAuth2Token(refreshToken);
+        const {
+            client: refreshedClient,
+            accessToken,
+            refreshToken: newRefreshToken,
+            expiresIn,
+        } = await client.refreshOAuth2Token(refreshToken);
 
-    // Store refreshed {accessToken} and {newRefreshToken} to replace the old ones
-    //REPACKAGE INTO JWT + STORE IN COOKIE. BEST TO CREATE DEDICATED FUNCTIONS TO DO THIS since doing in multiple places.
-    res.send("**imagine this is refreshed**");
-    // res.status(200).json({ success: true });
+        // Fetch basic user info:
+        const { data: userData } = await refreshedClient.v2.me({ "user.fields": ["profile_image_url"] });
+
+        res.locals.userData = userData;
+        res.locals.accessToken = accessToken;
+        res.locals.refreshToken = newRefreshToken;
+        res.locals.expiresIn = expiresIn;
+
+        const callback = () => res.status(200).json({ userData, success: true });
+        createJwtAndSetCookie(req, res, callback);
+    } catch (error) {
+        res.status(403).send("Failed to fetch new access_token with provided refresh_token :(" + error);
+    }
 };
 
-export { getRedirect, getAccessToken, refreshToken };
+const logout = (req: Request, res: Response) => {
+    res.clearCookie("twitter_auth");
+    res.clearCookie("twitter_jwt");
+    res.json({ success: true });
+};
+
+export { getRedirect, getAccessToken, refreshToken, logout };

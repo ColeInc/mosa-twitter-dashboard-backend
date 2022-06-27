@@ -2,6 +2,11 @@ import supertest from "supertest";
 import { app } from "../app";
 
 describe("login", () => {
+    //authentication middleware
+    ////if user passes no jwt token at all (in the cookie called twitter_jwt), receives 401 unauthorized back
+    //// if extracted JWT does not contain proper syntax json payload (run it through a zod schema at authentication middleware) return 400 error
+    //// if extracted access token is unsuccessful in creating new twitter API client instance, send call out to refresh_token controller to attempt fetching fresh access_token. if success, return valid, else return 401 unauthorized
+
     // redirect
     describe("get redirectURL", () => {
         describe("given that the redirect URL is formed successfully", () => {
@@ -64,4 +69,7 @@ describe("login", () => {
     // refresh_token
     //// confirm that we get valid access token returned if we provide valid access token
     //// confirm error handling works aka gives 403, etc.
+
+    // logout
+    //// confirm that "twitter_jwt" cookie is deleted
 });
