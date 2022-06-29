@@ -1,7 +1,6 @@
 import express from "express";
 import { getRedirect, getAccessToken, refreshToken, logout } from "../controllers/twitter-auth.controller";
 import authenticateUser from "../middleware/authentication";
-// import validatePayloadMiddleware from "../middleware/validate-payload";
 
 const router = express.Router();
 

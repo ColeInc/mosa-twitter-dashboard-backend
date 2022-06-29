@@ -30,7 +30,6 @@ const fetchNewAccessToken = async (req: Request, res: Response, next: NextFuncti
 
         // create new JWT token & store it into cookie:
         createJwtAndSetCookie(req, res, next);
-        next();
     } catch (error) {
         console.log(error);
         next(

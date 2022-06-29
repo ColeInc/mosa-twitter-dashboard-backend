@@ -24,7 +24,6 @@ const createJwtAndSetCookie = async (req: Request, res: Response, next: NextFunc
         const token = jwt.sign(payload, process.env.JWT_SECRET!, {
             expiresIn: 24 * 60 * 60 * 1000, // 24 hrs
         });
-        console.log("created JWT:", token);
 
         // Store JWT into httpOnly Cookie:
         res.cookie("twitter_jwt", token, {
@@ -34,7 +33,6 @@ const createJwtAndSetCookie = async (req: Request, res: Response, next: NextFunc
             sameSite: true,
         });
 
-        console.log("3 get here");
         next();
     } catch (error) {
         console.log(error);
