@@ -1,35 +1,64 @@
 import { Request, Response } from "express";
-import { TwitterApi } from "twitter-api-v2";
-import { decode } from "../helpers/crypto";
+import db from "../db/firebaseConfig";
+// import { TwitterApi } from "twitter-api-v2";
+// import { decode } from "../helpers/crypto";
 
 const getPosts = async (req: Request, res: Response) => {
     try {
-        console.log("gets to /posts");
-        // Establish twitter client with access token out of JWT:
-        // const accessToken = decode(res.locals.jwt.accessToken);
-        // const client = new TwitterApi(accessToken);
-        // const client = new TwitterApi(
-        //     "WFdKaGhjbzV0eWdKeTFNUTIycDJ1aElNdlVQdkpYRmdEWEEzcGJnVU5GdEREOjE2NTYwNDg2NjAxOTg6MTowOmF0OjE"
-        // );
+        // Establish twitter client with access token out of JWT, then fetch user details:
         const client = res.locals.twitterClient;
         const { data: userObject } = await client.v2.me();
-        console.log("userData at posts:", userObject);
-        res.json(userObject);
-        // res.send("*imagine this is a list of posts fetched back*");
+
+        let query = db.collection("Person").doc(userObject.id).collection("Posts");
+
+        // Check if any specified Type of Post is wanted, otherwise return all Queued/Draft Posts:
+        if (req.query.type) {
+            query = query.where("type", "==", req.query.type);
+        }
+
+        const snapshot = await query.get();
+        const posts = snapshot.docs.map((doc: any) => doc.data());
+
+        res.json(posts);
     } catch (error) {
-        res.status(400).send("failed to get posts:\n" + error);
+        res.status(400).send("failed to get posts from firestore db:\n" + error);
     }
 };
 
-const addPost = (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response) => {
     try {
-        // TODO: insert post into firebase db here
-
         console.log("received body:\n", req.body);
+
+        // Using the user's existing Twitter ID as the document ID so that we have a re-usable globally unique ID to easily fetch their info from in future:
+        const client = res.locals.twitterClient;
+        const { data: userObject } = await client.v2.me();
+        console.log("extracted user's data:\n", userObject);
+
+        const postCreated = await db.collection("Person").doc(userObject.id).collection("Posts").add(req.body);
+
+        res.status(200).json({
+            id: postCreated.id,
+            success: true,
+        });
+    } catch (error) {
+        res.status(400).json({ msg: "Failed to create post in firestore db.\n", error, success: false });
+    }
+};
+
+const updatePost = async (req: Request, res: Response) => {
+    try {
         res.status(200).json({ success: true });
     } catch (error) {
-        res.status(400).json({ msg: "Failed to store post in backend.", error, success: false });
+        res.status(400).json({ msg: "Failed to udpate post in firestore db.\n", error, success: false });
     }
 };
 
-export { getPosts, addPost };
+const deletePost = async (req: Request, res: Response) => {
+    try {
+        res.status(200).json({ success: true });
+    } catch (error) {
+        res.status(400).json({ msg: "Failed to delete post in firestore db.\n", error, success: false });
+    }
+};
+
+export { getPosts, createPost };
