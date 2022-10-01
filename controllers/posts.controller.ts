@@ -6,10 +6,11 @@ import db from "../db/firebaseConfig";
 const getPosts = async (req: Request, res: Response) => {
     try {
         // Establish twitter client with access token out of JWT, then fetch user details:
-        const client = res.locals.twitterClient;
-        const { data: userObject } = await client.v2.me();
+        // const client = res.locals.twitterClient;
+        // const { data: userObject } = await client.v2.me();
+        const userId = res.locals.userData.id;
 
-        let query = db.collection("Person").doc(userObject.id).collection("Posts");
+        let query = db.collection("Person").doc(userId).collection("Posts");
 
         // Check if any specified Type of Post is wanted, otherwise return all Queued/Draft Posts:
         if (req.query.type) {
@@ -30,11 +31,9 @@ const createPost = async (req: Request, res: Response) => {
         console.log("received body:\n", req.body);
 
         // Using the user's existing Twitter ID as the document ID so that we have a re-usable globally unique ID to easily fetch their info from in future:
-        const client = res.locals.twitterClient;
-        const { data: userObject } = await client.v2.me();
-        console.log("extracted user's data:\n", userObject);
+        const userId = res.locals.userData.id;
 
-        const postCreated = await db.collection("Person").doc(userObject.id).collection("Posts").add(req.body);
+        const postCreated = await db.collection("Person").doc(userId).collection("Posts").add(req.body);
 
         res.status(200).json({
             id: postCreated.id,
@@ -47,6 +46,11 @@ const createPost = async (req: Request, res: Response) => {
 
 const updatePost = async (req: Request, res: Response) => {
     try {
+        const { postId } = req.params;
+        const userId = res.locals.userData.id;
+
+        await db.collection("Person").doc(userId).collection("Posts").doc(postId).update(req.body);
+
         res.status(200).json({ success: true });
     } catch (error) {
         res.status(400).json({ msg: "Failed to udpate post in firestore db.\n", error, success: false });
@@ -55,10 +59,15 @@ const updatePost = async (req: Request, res: Response) => {
 
 const deletePost = async (req: Request, res: Response) => {
     try {
+        const { postId } = req.params;
+        const userId = res.locals.userData.id;
+
+        await db.collection("Person").doc(userId).collection("Posts").doc(postId).delete();
+
         res.status(200).json({ success: true });
     } catch (error) {
         res.status(400).json({ msg: "Failed to delete post in firestore db.\n", error, success: false });
     }
 };
 
-export { getPosts, createPost };
+export { getPosts, createPost, updatePost, deletePost };

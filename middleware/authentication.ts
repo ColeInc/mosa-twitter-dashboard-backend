@@ -26,10 +26,11 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
 
             // Attempt to fetch userData from Twitter with provided access_token. As long as error doesn't occur here we know it is valid.
             const client = new TwitterApi(decode(decodedJWT.accessToken));
-            const validResponse = await client.v2.me();
+            const { data: userData } = await client.v2.me();
 
             // if successful, store it in res.locals for subsequent controllers to use:
             res.locals.twitterClient = client;
+            res.locals.userData = userData;
             res.locals.jwt = decodedJWT;
             next();
         } catch (error) {
@@ -45,6 +46,8 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
             way (we assume old access_token expired). */
 
             res.locals.refreshToken = decode(decodedJWT.refreshToken);
+            console.log("pulled refresh token 2:", decode(decodedJWT.refreshToken));
+            console.log("pulled refresh token 3:", res.locals.refreshToken);
             fetchNewAccessToken(req, res, next);
         }
     } catch (error) {
