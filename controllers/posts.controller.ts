@@ -6,8 +6,6 @@ import db from "../db/firebaseConfig";
 const getPosts = async (req: Request, res: Response) => {
     try {
         // Establish twitter client with access token out of JWT, then fetch user details:
-        // const client = res.locals.twitterClient;
-        // const { data: userObject } = await client.v2.me();
         const userId = res.locals.userData.id;
 
         let query = db.collection("Person").doc(userId).collection("Posts");

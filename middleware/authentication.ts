@@ -11,7 +11,7 @@ import fetchNewAccessToken from "./fetch-new-acess-token";
 const auth = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.cookies.twitter_jwt) {
-            next(new UnauthenticatedError("Failed to authenticate request. Please provide valid bearer token!"));
+            next(new UnauthenticatedError("Failed to authenticate request. Please provide valid twitter_jwt cookie!"));
         }
         const token: string = req.cookies.twitter_jwt;
         const decodedJWT = jwt.verify(token, process.env.JWT_SECRET!) as jwtPayload;
@@ -56,7 +56,7 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
             next(new UnauthenticatedError("Failed to authenticate request. JWT Token expired!"));
         }
         console.log(error);
-        next(new UnauthenticatedError("Failed to authenticate request. Please provide valid bearer token!"));
+        next(new UnauthenticatedError("Failed to authenticate request. Please provide valid twitter_jwt cookie!"));
     }
 };
 
