@@ -26,8 +26,6 @@ const getPosts = async (req: Request, res: Response) => {
 
 const createPost = async (req: Request, res: Response) => {
     try {
-        console.log("received body:\n", req.body);
-
         // Using the user's existing Twitter ID as the document ID so that we have a re-usable globally unique ID to easily fetch their info from in future:
         const userId = res.locals.userData.id;
 
