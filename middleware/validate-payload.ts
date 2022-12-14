@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { AnyZodObject } from "zod";
 
 const validate = (schema: AnyZodObject) => async (req: Request, res: Response, next: NextFunction) => {
-    // console.log("validatePayloadMiddleware receives:", req.body, req.query, req.params);
     try {
         await schema.parseAsync({
             body: req.body,

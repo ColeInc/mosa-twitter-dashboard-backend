@@ -9,6 +9,6 @@ router.get("/", getPosts);
 router.post("/", validatePayloadMiddleware(postSchema), createPost);
 // router.post("/", createPost);
 router.patch("/:postId", validatePayloadMiddleware(postSchema), updatePost);
-router.delete("/:postId", validatePayloadMiddleware(postSchema), deletePost);
+router.delete("/:postId", deletePost);
 
 export default router;
